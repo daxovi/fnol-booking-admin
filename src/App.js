@@ -1,25 +1,48 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react'
+import { nacteniTicketu } from './components/api';
 
-function App() {
+const App = () => {
+
+  const [tickets, setTickets] = useState([]);
+  const nowDate = Date.now();
+
+  useEffect(() => {
+    nacteniTicketu()
+    .then(data => {
+        setTickets(data)
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+}, [])
+
+const dateToText = (miliseconds) => { 
+  const date = new Date(miliseconds);
+  const formatedDate = date.toLocaleString()
+  return formatedDate;
+ }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>Aktuální vstupenky: 
+      <div>
+      {
+  tickets
+    .filter(ticket => ticket.date > nowDate)
+    .map((ticket, index) => (
+      <div key={index}>Číslo vstupenky: {ticket.ticket}, email: {ticket.email}, datum: {dateToText(ticket.date)}</div>
+    ))
+}
     </div>
-  );
+    Expirované vstupenky:
+    {
+  tickets
+    .filter(ticket => ticket.date < nowDate)
+    .map((ticket, index) => (
+      <div key={index}>Číslo vstupenky: {ticket.ticket}, email: {ticket.email}, datum: {dateToText(ticket.date)}</div>
+    ))
+}
+      </div>
+  )
 }
 
 export default App;
