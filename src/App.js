@@ -19,14 +19,13 @@ const App = () => {
     nacteniDB();
   }, [])
 
-  const nacteniDB = () => {
-    nacteniTicketu()
-      .then(data => {
-        setTickets(data)
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
+  const nacteniDB = async () => {
+    try {
+      const data = await nacteniTicketu();
+      setTickets(data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   }
 
   const dateToText = (miliseconds) => {
