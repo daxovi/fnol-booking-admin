@@ -109,3 +109,9 @@ h3 {
   display: flex;
   gap: 1em;
 }
+
+.warning {
+  margin-top: 0.5em;
+  color: red;
+  
+}

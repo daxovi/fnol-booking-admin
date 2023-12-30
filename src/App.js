@@ -112,12 +112,35 @@ const App = () => {
     }
   }
 
+  const checkDuplicates = () => { 
+    const activeTickets = tickets.filter(ticket => ticket.date > nowDate);
+    const ticketCounts = {};
+    const duplicates = [];
+
+    for (const item of activeTickets) {
+        if (ticketCounts[item.ticket]) {
+            // Pokud ticket už existuje, znamená to, že jsme našli duplikát
+            if (ticketCounts[item.ticket] === 1) {
+                // Přidáme ticket do pole duplikátů pouze při prvním nalezení duplikátu
+                duplicates.push(item.ticket);
+            }
+            ticketCounts[item.ticket] += 1;
+        } else {
+            ticketCounts[item.ticket] = 1; // Nastavíme počet na 1 pro každý nový ticket
+        }
+    }
+    return duplicates;
+   }
+
   return (
     <div className='container'>
       <h1>Rezervace ples FNOL</h1>
       <div className="">
         Filtr e-mailů: <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" />
       </div>
+     
+        {(checkDuplicates().length != 0) &&  <div className='warning'>Varování! Nalezeny duplikáty: {checkDuplicates().join(", ")}</div>}
+      
       <div className='tickets-section'>
         <h3>Platné rezervace</h3>
         <div className="ticket-row ticket-header">
