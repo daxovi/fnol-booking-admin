@@ -19,6 +19,11 @@ const App = () => {
     nacteniDB();
   }, [])
 
+  const zobrazitDatum = (timestamp) => { 
+    var datum = new Date(timestamp);
+    return datum.toLocaleDateString('cs-CZ'); // pro české formátování
+}
+
   const nacteniDB = async () => {
     try {
       const data = await nacteniTicketu();
@@ -45,7 +50,7 @@ const App = () => {
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(null);
-      }, 5000);
+      }, 2000);
     } catch (error) {
       setSaveSuccess(false);
       setErrorMessage(error.message);
@@ -67,7 +72,25 @@ const App = () => {
     }
   }
 
-  const deleteTicket = async (id, event) => { 
+  const reBookTicket = async (id, event) => {
+    event.stopPropagation();
+
+    var datum = new Date();
+    datum.setDate(datum.getDate() + 5); // přidání 5 dní
+    datum.setHours(23, 59, 0, 0); // nastavení na půlnoc
+    const expireDate = datum.getTime();
+
+    try {
+      await finishTicket(id, expireDate);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSelectedTicket();
+      nacteniDB();
+    }
+  }
+
+  const deleteTicket = async (id, event) => {
     event.stopPropagation();
     try {
       await finishTicket(id, 18000000);
@@ -90,12 +113,13 @@ const App = () => {
   }
 
   return (
-    <div>
+    <div className='container'>
+      <h1>Rezervace ples FNOL</h1>
       <div className="">
-        <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" /> {selectedTicket}
+        Filtr e-mailů: <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" />
       </div>
-      <div>
-        Aktuální vstupenky:
+      <div className='tickets-section'>
+        <h3>Platné rezervace</h3>
         <div className="ticket-row ticket-header">
           <div className="ticket ticket-nr">číslo vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
@@ -106,10 +130,13 @@ const App = () => {
             .filter(ticket => ticket.date > nowDate && ticket.date < 1790000000000 && ticket.email.includes(searchBoxText))
             .map((ticket, index) => (
               <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
-              <div className="ticket ticket-nr">{ticket.ticket}</div>
+                <div className="ticket ticket-nr">{ticket.ticket}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
-                <div className="ticket ticket-date">{dateToText(ticket.date)}
-                <button className='btn btn-positive' onClick={(event) => { validateTicket(ticket._id, event) }}>vyzvednout</button>
+                <div className="ticket ticket-date">{zobrazitDatum(ticket.date)}
+                <div className="ticket-btn">
+                <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>prodloužit</button>
+                  <button className='btn btn-positive' onClick={(event) => { validateTicket(ticket._id, event) }}>vyzvednout</button>
+                  </div>
                 </div>
                 {selectedTicket == ticket._id &&
                   <div className="ticket-edit-row">
@@ -118,7 +145,7 @@ const App = () => {
                 }
                 {selectedTicket == ticket._id &&
                   <div className="ticket-edit-row ticket-controls">
-                    {!isSaving && !saveSuccess && <button onClick={() => { saveNotes(ticket._id, newNotes) }}>uložit</button>}
+                    {!isSaving && !saveSuccess && <button onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
                     {isSaving && <p>ukládání...</p>}
                     {saveSuccess && <p>uloženo</p>}
                     {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
@@ -128,22 +155,27 @@ const App = () => {
             ))
         }
       </div>
-      <div>
-        Vyzvednuté vstupenky:
+      <div className='tickets-section'>
+        <h3>
+        Vyzvednuté rezervace</h3>
         <div className="ticket-row ticket-header">
           <div className="ticket ticket-nr">číslo vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
-          <div className="ticket ticket-date">datum expirace</div>
+          <div className="ticket ticket-date"></div>
         </div>
         {
           tickets
             .filter(ticket => ticket.date > 1790000000000 && ticket.email.includes(searchBoxText))
             .map((ticket, index) => (
               <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
-              <div className="ticket ticket-nr">{ticket.ticket}</div>
+                <div className="ticket ticket-nr">{ticket.ticket}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
-                <div className="ticket ticket-date">{dateToText(ticket.date)}
+                <div className="ticket ticket-date">
+                &nbsp;
+                <div className="ticket-btn">
+                <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>prodloužit</button>
                   <button className='btn btn-negative' onClick={(event) => { deleteTicket(ticket._id, event) }}>odstranit</button>
+                  </div>
                 </div>
                 {selectedTicket == ticket._id &&
                   <div className="ticket-edit-row">
@@ -162,38 +194,40 @@ const App = () => {
             ))
         }
       </div>
-      Expirované vstupenky:
-      <div className="ticket-row ticket-header">
-        <div className="ticket ticket-nr">číslo vstupenky</div>
-        <div className="ticket ticket-email">e-mail</div>
-        <div className="ticket ticket-date">datum expirace</div>
-      </div>
-      {
-        tickets
-          .filter(ticket => ticket.date < nowDate && ticket.email.includes(searchBoxText))
-          .map((ticket, index) => (
-            <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
-              <div className="ticket ticket-nr">{ticket.ticket}</div>
-              <div className="ticket ticket-email">{ticket.email}</div>
-              <div className="ticket ticket-date">{dateToText(ticket.date)}
-                <button className='btn btn-positive' onClick={(event) => { validateTicket(ticket._id, event) }}>vyzvednout</button>
+      <div className="tickets-section">
+        <h3>
+        Expirované rezervace</h3>
+        <div className="ticket-row ticket-header">
+          <div className="ticket ticket-nr">číslo vstupenky</div>
+          <div className="ticket ticket-email">e-mail</div>
+          <div className="ticket ticket-date">datum expirace</div>
+        </div>
+        {
+          tickets
+            .filter(ticket => ticket.date < nowDate && ticket.email.includes(searchBoxText))
+            .map((ticket, index) => (
+              <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
+                <div className="ticket ticket-nr">{ticket.ticket}</div>
+                <div className="ticket ticket-email">{ticket.email}</div>
+                <div className="ticket ticket-date">{(ticket.date != 18000000) && zobrazitDatum(ticket.date)}
+                </div>
+                {selectedTicket == ticket._id &&
+                  <div className="ticket-edit-row">
+                    <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
+                  </div>
+                }
+                {selectedTicket == ticket._id &&
+                  <div className="ticket-edit-row ticket-controls">
+                    {!isSaving && !saveSuccess && <button onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
+                    {isSaving && <p>ukládání...</p>}
+                    {saveSuccess && <p>uloženo</p>}
+                    {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
+                  </div>
+                }
               </div>
-              {selectedTicket == ticket._id &&
-                <div className="ticket-edit-row">
-                  <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
-                </div>
-              }
-              {selectedTicket == ticket._id &&
-                <div className="ticket-edit-row ticket-controls">
-                  {!isSaving && !saveSuccess && <button onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
-                  {isSaving && <p>ukládání...</p>}
-                  {saveSuccess && <p>uloženo</p>}
-                  {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
-                </div>
-              }
-            </div>
-          ))
-      }
+            ))
+        }
+      </div>
     </div>
   )
 }

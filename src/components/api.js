@@ -59,7 +59,7 @@ export const nahraniObjednavky = async (vybrane, email) => {
 
 export const nacteniTicketu = async () => {
     try {
-        const response = await fetch(process.env.REACT_APP_BACKEND + '/get-tickets')
+        const response = await fetch(process.env.REACT_APP_BACKEND + '/get-tickets-admin')
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
@@ -91,6 +91,7 @@ export const updateNotes = async (id, notes) => {
 
     } catch (err) {
         console.log("error: ", err)
+        throw err;
     }
  }
 
