@@ -196,7 +196,7 @@ const App = () => {
                 <div className="ticket ticket-date">
                 &nbsp;
                 <div className="ticket-btn">
-                <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>prodloužit</button>
+                <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>zpět rezervovat</button>
                   <button className='btn btn-negative' onClick={(event) => { deleteTicket(ticket._id, event) }}>odstranit</button>
                   </div>
                 </div>

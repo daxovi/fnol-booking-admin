@@ -5,6 +5,7 @@
   flex-flow: column;
   max-width: 1140px;
   margin: 0 auto;
+  margin-bottom: 1em;
   padding-right: 15px;
   padding-left: 15px;
 }
