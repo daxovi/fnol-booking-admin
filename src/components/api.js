@@ -1,9 +1,7 @@
 export const nacteniTicketu = async (password) => {
     try {
         const username = 'admin'; // Uživatelské jméno pro autentizaci
-
-        // Zakódování uživatelského jména a hesla do base64
-        const base64Credentials = btoa(username + ':' + password);
+        const base64Credentials = btoa(username + ':' + password); // Zakódování uživatelského jména a hesla do base64
 
         const response = await fetch(process.env.REACT_APP_BACKEND + '/get-tickets-admin', {
             headers: {
@@ -27,6 +25,9 @@ export const nacteniTicketu = async (password) => {
 export const updateNotes = async (id, notes) => {
     const url = process.env.REACT_APP_BACKEND + `/save-ticket/${id}`;
 
+    const username = 'admin'; // Uživatelské jméno pro autentizaci
+    const base64Credentials = btoa(username + ':' + localStorage.getItem('password')); // Zakódování uživatelského jména a hesla do base64
+
     try {
         const response = await fetch(url, {
             method: 'PATCH',
@@ -35,6 +36,7 @@ export const updateNotes = async (id, notes) => {
             }),
             headers: {
                 'Content-type': 'application/json; charset=UTF-8',
+                'Authorization': 'Basic ' + base64Credentials
             },
         })
 
@@ -50,6 +52,9 @@ export const updateNotes = async (id, notes) => {
 export const finishTicket = async (id, time) => {
     const url = process.env.REACT_APP_BACKEND + `/save-ticket/${id}`;
 
+    const username = 'admin'; // Uživatelské jméno pro autentizaci
+    const base64Credentials = btoa(username + ':' + localStorage.getItem('password')); // Zakódování uživatelského jména a hesla do base64
+
     try {
         const response = await fetch(url, {
             method: 'PATCH',
@@ -58,6 +63,7 @@ export const finishTicket = async (id, time) => {
             }),
             headers: {
                 'Content-type': 'application/json; charset=UTF-8',
+                'Authorization': 'Basic ' + base64Credentials
             },
         })
 
