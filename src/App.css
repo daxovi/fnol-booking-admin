@@ -116,3 +116,16 @@ h3 {
   color: red;
   
 }
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.toolbar a {
+  margin-left: 1em;
+}
+
+.toolbar a:nth-of-type(2){
+  color: red;
+}

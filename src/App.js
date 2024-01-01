@@ -12,6 +12,7 @@ const App = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [password, setPassword] = useState('');
 
   const nowDate = Date.now();
 
@@ -19,24 +20,18 @@ const App = () => {
     nacteniDB();
   }, [])
 
-  const zobrazitDatum = (timestamp) => { 
+  const zobrazitDatum = (timestamp) => {
     var datum = new Date(timestamp);
     return datum.toLocaleDateString('cs-CZ'); // pro české formátování
-}
+  }
 
   const nacteniDB = async () => {
     try {
-      const data = await nacteniTicketu();
+      const data = await nacteniTicketu(localStorage.getItem('password') );
       setTickets(data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  }
-
-  const dateToText = (miliseconds) => {
-    const date = new Date(miliseconds);
-    const formatedDate = date.toLocaleString()
-    return formatedDate;
   }
 
   const saveNotes = async (id, notes, event) => {
@@ -112,35 +107,69 @@ const App = () => {
     }
   }
 
-  const checkDuplicates = () => { 
+  const checkDuplicates = () => {
     const activeTickets = tickets.filter(ticket => ticket.date > nowDate);
     const ticketCounts = {};
     const duplicates = [];
 
     for (const item of activeTickets) {
-        if (ticketCounts[item.ticket]) {
-            // Pokud ticket už existuje, znamená to, že jsme našli duplikát
-            if (ticketCounts[item.ticket] === 1) {
-                // Přidáme ticket do pole duplikátů pouze při prvním nalezení duplikátu
-                duplicates.push(item.ticket);
-            }
-            ticketCounts[item.ticket] += 1;
-        } else {
-            ticketCounts[item.ticket] = 1; // Nastavíme počet na 1 pro každý nový ticket
+      if (ticketCounts[item.ticket]) {
+        // Pokud ticket už existuje, znamená to, že jsme našli duplikát
+        if (ticketCounts[item.ticket] === 1) {
+          // Přidáme ticket do pole duplikátů pouze při prvním nalezení duplikátu
+          duplicates.push(item.ticket);
         }
+        ticketCounts[item.ticket] += 1;
+      } else {
+        ticketCounts[item.ticket] = 1; // Nastavíme počet na 1 pro každý nový ticket
+      }
     }
     return duplicates;
-   }
+  }
 
-  return (
+  const isAuthenticated = () => {
+    return localStorage.getItem('isLoggedIn') === 'true';
+  }
+
+  const logOut = () => {
+    localStorage.removeItem('password');
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    localStorage.setItem('password', password);
+   // loginAdmin(password);
+    window.location.reload();
+  };
+
+  if (tickets.length == 0) {
+    return (
+      <form onSubmit={handleSubmit}>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Heslo"
+        />
+        <button type="submit">Přihlásit se</button>
+      </form>
+    );
+  } else {
+   return (
     <div className='container'>
       <h1>Rezervace ples FNOL</h1>
-      <div className="">
-        Filtr e-mailů: <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" />
+      <div className="toolbar">
+        <div>
+          Filtr e-mailů: <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" />
+        </div>
+        <div>
+          <a href="http://www.plesfnol.cz/rezervace" target='blank'>Přejít na rezervace</a>
+          <a onClick={logOut} href="">Odhlásit se</a>
+        </div>
       </div>
-     
-        {(checkDuplicates().length != 0) &&  <div className='warning'>Varování! Nalezeny duplikáty: {checkDuplicates().join(", ")}</div>}
-      
+
+      {(checkDuplicates().length != 0) && <div className='warning'>Varování! Nalezeny duplikáty: {checkDuplicates().join(", ")}</div>}
+
       <div className='tickets-section'>
         <h3>Platné rezervace</h3>
         <div className="ticket-row ticket-header">
@@ -156,9 +185,9 @@ const App = () => {
                 <div className="ticket ticket-nr">{ticket.ticket}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
                 <div className="ticket ticket-date">{zobrazitDatum(ticket.date)}
-                <div className="ticket-btn">
-                <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>prodloužit</button>
-                  <button className='btn btn-positive' onClick={(event) => { validateTicket(ticket._id, event) }}>vyzvednout</button>
+                  <div className="ticket-btn">
+                    <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>prodloužit</button>
+                    <button className='btn btn-positive' onClick={(event) => { validateTicket(ticket._id, event) }}>vyzvednout</button>
                   </div>
                 </div>
                 {selectedTicket == ticket._id &&
@@ -180,7 +209,7 @@ const App = () => {
       </div>
       <div className='tickets-section'>
         <h3>
-        Vyzvednuté rezervace</h3>
+          Vyzvednuté rezervace</h3>
         <div className="ticket-row ticket-header">
           <div className="ticket ticket-nr">číslo vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
@@ -194,10 +223,10 @@ const App = () => {
                 <div className="ticket ticket-nr">{ticket.ticket}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
                 <div className="ticket ticket-date">
-                &nbsp;
-                <div className="ticket-btn">
-                <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>zpět rezervovat</button>
-                  <button className='btn btn-negative' onClick={(event) => { deleteTicket(ticket._id, event) }}>odstranit</button>
+                  &nbsp;
+                  <div className="ticket-btn">
+                    <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>zpět rezervovat</button>
+                    <button className='btn btn-negative' onClick={(event) => { deleteTicket(ticket._id, event) }}>odstranit</button>
                   </div>
                 </div>
                 {selectedTicket == ticket._id &&
@@ -219,7 +248,7 @@ const App = () => {
       </div>
       <div className="tickets-section">
         <h3>
-        Expirované rezervace</h3>
+          Expirované rezervace</h3>
         <div className="ticket-row ticket-header">
           <div className="ticket ticket-nr">číslo vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
@@ -252,7 +281,7 @@ const App = () => {
         }
       </div>
     </div>
-  )
+  )}
 }
 
 export default App;
