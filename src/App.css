@@ -114,7 +114,6 @@ h3 {
 .warning {
   margin-top: 0.5em;
   color: red;
-  
 }
 
 .toolbar {
@@ -128,4 +127,31 @@ h3 {
 
 .toolbar a:nth-of-type(2){
   color: red;
+}
+
+.press-hide {
+  display: none;
+}
+
+.ticket-row-press {
+  background-color: white;
+  border-top: black 1px solid;
+}
+
+.ticket-row-press .ticket-btn {
+  display: none;
+}
+
+.ticket-row-press:hover {
+  background-color: white;
+}
+
+.ticket-header-press {
+  background-color: black;
+  color: white;
+}
+
+.ticket-header-press:hover {
+  background-color: black;
+  color: white;
 }

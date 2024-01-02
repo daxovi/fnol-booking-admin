@@ -13,6 +13,7 @@ const App = () => {
   const [saveSuccess, setSaveSuccess] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [password, setPassword] = useState('');
+  const [pressReady, setPressReady] = useState(false);
 
   const nowDate = Date.now();
 
@@ -98,12 +99,15 @@ const App = () => {
   }
 
   const editToggle = (index, ticket) => {
-    if (selectedTicket == ticket._id) {
-      setSelectedTicket();
-    } else {
-      setSelectedTicket(ticket._id);
-      setNewNotes(ticket.notes)
-      setNotes(ticket.notes);
+    if (!pressReady) {
+      if (selectedTicket == ticket._id) {
+        setSelectedTicket();
+      } else {
+        console.log(ticket._id);
+        setSelectedTicket(ticket._id);
+        setNewNotes(ticket.notes)
+        setNotes(ticket.notes);
+      }
     }
   }
 
@@ -125,10 +129,6 @@ const App = () => {
       }
     }
     return duplicates;
-  }
-
-  const isAuthenticated = () => {
-    return localStorage.getItem('isLoggedIn') === 'true';
   }
 
   const logOut = () => {
@@ -163,14 +163,19 @@ const App = () => {
           Filtr e-mailů: <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" />
         </div>
         <div>
-          <a href="http://www.plesfnol.cz/rezervace" target='blank'>Přejít na rezervace</a>
-          <a onClick={logOut} href="">Odhlásit se</a>
+          {pressReady ? <a onClick={() => { setPressReady(false) }} href="">Zpět do aplikace</a> : <a href="" onClick={(event) => { 
+            event.preventDefault();
+            setPressReady(true);
+            setSelectedTicket();
+            }}>Formát pro tisk</a>}
+          {!pressReady && <a href="http://www.plesfnol.cz/rezervace" target='blank'>Přejít na rezervace</a>}
+          {!pressReady && <a onClick={logOut} href="">Odhlásit se</a>}
         </div>
       </div>
 
       {(checkDuplicates().length != 0) && <div className='warning'>Varování! Nalezeny duplikáty: {checkDuplicates().join(", ")}</div>}
 
-      <div className='tickets-section'>
+      <div className={`tickets-section ${pressReady && "press-hide"}`}>
         <h3>Platné rezervace</h3>
         <div className="ticket-row ticket-header">
           <div className="ticket ticket-nr">číslo vstupenky</div>
@@ -197,7 +202,7 @@ const App = () => {
                 }
                 {selectedTicket == ticket._id &&
                   <div className="ticket-edit-row ticket-controls">
-                    {!isSaving && !saveSuccess && <button onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
+                    {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
                     {isSaving && <p>ukládání...</p>}
                     {saveSuccess && <p>uloženo</p>}
                     {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
@@ -210,7 +215,7 @@ const App = () => {
       <div className='tickets-section'>
         <h3>
           Vyzvednuté rezervace</h3>
-        <div className="ticket-row ticket-header">
+        <div className= {`ticket-row ticket-header ${pressReady && "ticket-header-press"}`}>
           <div className="ticket ticket-nr">číslo vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
           <div className="ticket ticket-date"></div>
@@ -219,14 +224,14 @@ const App = () => {
           tickets
             .filter(ticket => ticket.date > 1790000000000 && ticket.email.includes(searchBoxText))
             .map((ticket, index) => (
-              <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
+              <div className={`ticket-row ${pressReady && "ticket-row-press"}`} key={index} onClick={() => { { editToggle(index, ticket) } }}>
                 <div className="ticket ticket-nr">{ticket.ticket}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
                 <div className="ticket ticket-date">
                   &nbsp;
+                  {pressReady && `${ticket.notes}`}
                   <div className="ticket-btn">
                     <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>zpět rezervovat</button>
-                    <button className='btn btn-negative' onClick={(event) => { deleteTicket(ticket._id, event) }}>odstranit</button>
                   </div>
                 </div>
                 {selectedTicket == ticket._id &&
@@ -246,7 +251,7 @@ const App = () => {
             ))
         }
       </div>
-      <div className="tickets-section">
+      <div className={`tickets-section ${pressReady && "press-hide"}`}>
         <h3>
           Expirované rezervace</h3>
         <div className="ticket-row ticket-header">
@@ -270,7 +275,7 @@ const App = () => {
                 }
                 {selectedTicket == ticket._id &&
                   <div className="ticket-edit-row ticket-controls">
-                    {!isSaving && !saveSuccess && <button onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
+                    {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
                     {isSaving && <p>ukládání...</p>}
                     {saveSuccess && <p>uloženo</p>}
                     {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
