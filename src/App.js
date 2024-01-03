@@ -21,6 +21,15 @@ const App = () => {
     nacteniDB();
   }, [])
 
+  const replaceUnderscore = (string) => { 
+    return string.replace("_", "/");
+ }
+
+ const replaceUnderscoreArray = (array) => { 
+    const newArray = array.map((x) => replaceUnderscore(x));
+    return newArray;
+  }
+
   const zobrazitDatum = (timestamp) => {
     var datum = new Date(timestamp);
     return datum.toLocaleDateString('cs-CZ'); // pro české formátování
@@ -178,7 +187,7 @@ const App = () => {
       <div className={`tickets-section ${pressReady && "press-hide"}`}>
         <h3>Platné rezervace</h3>
         <div className="ticket-row ticket-header">
-          <div className="ticket ticket-nr">číslo vstupenky</div>
+          <div className="ticket ticket-nr">č. stolu/vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
           <div className="ticket ticket-date">datum expirace</div>
         </div>
@@ -187,7 +196,7 @@ const App = () => {
             .filter(ticket => ticket.date > nowDate && ticket.date < 1790000000000 && ticket.email.includes(searchBoxText))
             .map((ticket, index) => (
               <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
-                <div className="ticket ticket-nr">{ticket.ticket}</div>
+                <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
                 <div className="ticket ticket-date">{zobrazitDatum(ticket.date)}
                   <div className="ticket-btn">
@@ -216,7 +225,7 @@ const App = () => {
         <h3>
           Vyzvednuté rezervace</h3>
         <div className= {`ticket-row ticket-header ${pressReady && "ticket-header-press"}`}>
-          <div className="ticket ticket-nr">číslo vstupenky</div>
+          <div className="ticket ticket-nr">č. stolu/vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
           <div className="ticket ticket-date"></div>
         </div>
@@ -225,7 +234,7 @@ const App = () => {
             .filter(ticket => ticket.date > 1790000000000 && ticket.email.includes(searchBoxText))
             .map((ticket, index) => (
               <div className={`ticket-row ${pressReady && "ticket-row-press"}`} key={index} onClick={() => { { editToggle(index, ticket) } }}>
-                <div className="ticket ticket-nr">{ticket.ticket}</div>
+                <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
                 <div className="ticket ticket-date">
                   &nbsp;
@@ -255,7 +264,7 @@ const App = () => {
         <h3>
           Expirované rezervace</h3>
         <div className="ticket-row ticket-header">
-          <div className="ticket ticket-nr">číslo vstupenky</div>
+          <div className="ticket ticket-nr">č. stolu/vstupenky</div>
           <div className="ticket ticket-email">e-mail</div>
           <div className="ticket ticket-date">datum expirace</div>
         </div>
@@ -264,7 +273,7 @@ const App = () => {
             .filter(ticket => ticket.date < nowDate && ticket.email.includes(searchBoxText))
             .map((ticket, index) => (
               <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
-                <div className="ticket ticket-nr">{ticket.ticket}</div>
+                <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
                 <div className="ticket ticket-email">{ticket.email}</div>
                 <div className="ticket ticket-date">{(ticket.date != 18000000) && zobrazitDatum(ticket.date)}
                 </div>
