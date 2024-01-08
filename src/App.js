@@ -21,11 +21,11 @@ const App = () => {
     nacteniDB();
   }, [])
 
-  const replaceUnderscore = (string) => { 
+  const replaceUnderscore = (string) => {
     return string.replace("_", "/");
- }
+  }
 
- const replaceUnderscoreArray = (array) => { 
+  const replaceUnderscoreArray = (array) => {
     const newArray = array.map((x) => replaceUnderscore(x));
     return newArray;
   }
@@ -37,7 +37,7 @@ const App = () => {
 
   const nacteniDB = async () => {
     try {
-      const data = await nacteniTicketu(localStorage.getItem('password') );
+      const data = await nacteniTicketu(localStorage.getItem('password'));
       setTickets(data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -81,9 +81,20 @@ const App = () => {
     event.stopPropagation();
 
     var datum = new Date();
-    datum.setDate(datum.getDate() + 5); // přidání 5 dní
-    datum.setHours(23, 59, 0, 0); // nastavení na půlnoc
+    var delay_dny = 4;
+
+    for (var i = 0; i < delay_dny; i++) {
+      datum.setDate(datum.getDate() + 1); // Přidat jeden den
+
+      // Kontrola, zda je datum víkend (sobota = 6, neděle = 0)
+      if (datum.getDay() === 6 || datum.getDay() === 0) {
+        delay_dny++; // Pokud ano, přidat další den k celkovému počtu
+      }
+    }
+
+    datum.setHours(23, 59, 0, 0); // Nastavení na půlnoc
     const expireDate = datum.getTime();
+
 
     try {
       await finishTicket(id, expireDate);
@@ -147,7 +158,7 @@ const App = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     localStorage.setItem('password', password);
-   // loginAdmin(password);
+    // loginAdmin(password);
     window.location.reload();
   };
 
@@ -164,138 +175,139 @@ const App = () => {
       </form>
     );
   } else {
-   return (
-    <div className='container'>
-      <h1>Rezervace ples FNOL</h1>
-      <div className="toolbar">
-        <div>
-          Filtr e-mailů: <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" />
-        </div>
-        <div>
-          {pressReady ? <a onClick={() => { setPressReady(false) }} href="">Zpět do aplikace</a> : <a href="" onClick={(event) => { 
-            event.preventDefault();
-            setPressReady(true);
-            setSelectedTicket();
+    return (
+      <div className='container'>
+        <h1>Rezervace ples FNOL</h1>
+        <div className="toolbar">
+          <div>
+            Filtr e-mailů: <input onChange={(event) => { setSearchBoxText(event.target.value) }} type="text" name="" id="" />
+          </div>
+          <div>
+            {pressReady ? <a onClick={() => { setPressReady(false) }} href="">Zpět do aplikace</a> : <a href="" onClick={(event) => {
+              event.preventDefault();
+              setPressReady(true);
+              setSelectedTicket();
             }}>Formát pro tisk</a>}
-          {!pressReady && <a href="http://www.plesfnol.cz/rezervace" target='blank'>Přejít na rezervace</a>}
-          {!pressReady && <a onClick={logOut} href="">Odhlásit se</a>}
+            {!pressReady && <a href="http://www.plesfnol.cz/rezervace" target='blank'>Přejít na rezervace</a>}
+            {!pressReady && <a onClick={logOut} href="">Odhlásit se</a>}
+          </div>
         </div>
-      </div>
 
-      {(checkDuplicates().length != 0) && <div className='warning'>Varování! Nalezeny duplikáty: {checkDuplicates().join(", ")}</div>}
+        {(checkDuplicates().length != 0) && <div className='warning'>Varování! Nalezeny duplikáty: {checkDuplicates().join(", ")}</div>}
 
-      <div className={`tickets-section ${pressReady && "press-hide"}`}>
-        <h3>Platné rezervace</h3>
-        <div className="ticket-row ticket-header">
-          <div className="ticket ticket-nr">č. stolu/vstupenky</div>
-          <div className="ticket ticket-email">e-mail</div>
-          <div className="ticket ticket-date">datum expirace</div>
-        </div>
-        {
-          tickets
-            .filter(ticket => ticket.date > nowDate && ticket.date < 1790000000000 && ticket.email.includes(searchBoxText))
-            .map((ticket, index) => (
-              <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
-                <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
-                <div className="ticket ticket-email">{ticket.email}</div>
-                <div className="ticket ticket-date">{zobrazitDatum(ticket.date)}
-                  <div className="ticket-btn">
-                    <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>prodloužit</button>
-                    <button className='btn btn-positive' onClick={(event) => { validateTicket(ticket._id, event) }}>vyzvednout</button>
+        <div className={`tickets-section ${pressReady && "press-hide"}`}>
+          <h3>Platné rezervace</h3>
+          <div className="ticket-row ticket-header">
+            <div className="ticket ticket-nr">č. stolu/vstupenky</div>
+            <div className="ticket ticket-email">e-mail</div>
+            <div className="ticket ticket-date">datum expirace</div>
+          </div>
+          {
+            tickets
+              .filter(ticket => ticket.date > nowDate && ticket.date < 1790000000000 && ticket.email.toLowerCase().includes(searchBoxText.toLowerCase()))
+              .map((ticket, index) => (
+                <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
+                  <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
+                  <div className="ticket ticket-email">{ticket.email}</div>
+                  <div className="ticket ticket-date">{zobrazitDatum(ticket.date)}
+                    <div className="ticket-btn">
+                      <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>prodloužit</button>
+                      <button className='btn btn-positive' onClick={(event) => { validateTicket(ticket._id, event) }}>vyzvednout</button>
+                    </div>
                   </div>
+                  {selectedTicket == ticket._id &&
+                    <div className="ticket-edit-row">
+                      <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
+                    </div>
+                  }
+                  {selectedTicket == ticket._id &&
+                    <div className="ticket-edit-row ticket-controls">
+                      {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
+                      {isSaving && <p>ukládání...</p>}
+                      {saveSuccess && <p>uloženo</p>}
+                      {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
+                    </div>
+                  }
                 </div>
-                {selectedTicket == ticket._id &&
-                  <div className="ticket-edit-row">
-                    <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
-                  </div>
-                }
-                {selectedTicket == ticket._id &&
-                  <div className="ticket-edit-row ticket-controls">
-                    {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
-                    {isSaving && <p>ukládání...</p>}
-                    {saveSuccess && <p>uloženo</p>}
-                    {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
-                  </div>
-                }
-              </div>
-            ))
-        }
-      </div>
-      <div className='tickets-section'>
-        <h3>
-          Vyzvednuté rezervace</h3>
-        <div className= {`ticket-row ticket-header ${pressReady && "ticket-header-press"}`}>
-          <div className="ticket ticket-nr">č. stolu/vstupenky</div>
-          <div className="ticket ticket-email">e-mail</div>
-          <div className="ticket ticket-date"></div>
+              ))
+          }
         </div>
-        {
-          tickets
-            .filter(ticket => ticket.date > 1790000000000 && ticket.email.includes(searchBoxText))
-            .map((ticket, index) => (
-              <div className={`ticket-row ${pressReady && "ticket-row-press"}`} key={index} onClick={() => { { editToggle(index, ticket) } }}>
-                <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
-                <div className="ticket ticket-email">{ticket.email}</div>
-                <div className="ticket ticket-date">
-                  &nbsp;
-                  {pressReady && `${ticket.notes}`}
-                  <div className="ticket-btn">
-                    <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>zpět rezervovat</button>
+        <div className='tickets-section'>
+          <h3>
+            Vyzvednuté rezervace</h3>
+          <div className={`ticket-row ticket-header ${pressReady && "ticket-header-press"}`}>
+            <div className="ticket ticket-nr">č. stolu/vstupenky</div>
+            <div className="ticket ticket-email">e-mail</div>
+            <div className="ticket ticket-date"></div>
+          </div>
+          {
+            tickets
+              .filter(ticket => ticket.date > 1790000000000 && ticket.email.toLowerCase().includes(searchBoxText.toLowerCase()))
+              .map((ticket, index) => (
+                <div className={`ticket-row ${pressReady && "ticket-row-press"}`} key={index} onClick={() => { { editToggle(index, ticket) } }}>
+                  <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
+                  <div className="ticket ticket-email">{ticket.email}</div>
+                  <div className="ticket ticket-date">
+                    &nbsp;
+                    {pressReady && `${ticket.notes}`}
+                    <div className="ticket-btn">
+                      <button className='btn btn-neutral' onClick={(event) => { reBookTicket(ticket._id, event) }}>zpět rezervovat</button>
+                    </div>
                   </div>
+                  {selectedTicket == ticket._id &&
+                    <div className="ticket-edit-row">
+                      <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
+                    </div>
+                  }
+                  {selectedTicket == ticket._id &&
+                    <div className="ticket-edit-row ticket-controls">
+                      {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
+                      {isSaving && <p>ukládání...</p>}
+                      {saveSuccess && <p>uloženo</p>}
+                      {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
+                    </div>
+                  }
                 </div>
-                {selectedTicket == ticket._id &&
-                  <div className="ticket-edit-row">
-                    <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
-                  </div>
-                }
-                {selectedTicket == ticket._id &&
-                  <div className="ticket-edit-row ticket-controls">
-                    {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
-                    {isSaving && <p>ukládání...</p>}
-                    {saveSuccess && <p>uloženo</p>}
-                    {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
-                  </div>
-                }
-              </div>
-            ))
-        }
-      </div>
-      <div className={`tickets-section ${pressReady && "press-hide"}`}>
-        <h3>
-          Expirované rezervace</h3>
-        <div className="ticket-row ticket-header">
-          <div className="ticket ticket-nr">č. stolu/vstupenky</div>
-          <div className="ticket ticket-email">e-mail</div>
-          <div className="ticket ticket-date">datum expirace</div>
+              ))
+          }
         </div>
-        {
-          tickets
-            .filter(ticket => ticket.date < nowDate && ticket.email.includes(searchBoxText))
-            .map((ticket, index) => (
-              <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
-                <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
-                <div className="ticket ticket-email">{ticket.email}</div>
-                <div className="ticket ticket-date">{(ticket.date != 18000000) && zobrazitDatum(ticket.date)}
+        <div className={`tickets-section ${pressReady && "press-hide"}`}>
+          <h3>
+            Expirované rezervace</h3>
+          <div className="ticket-row ticket-header">
+            <div className="ticket ticket-nr">č. stolu/vstupenky</div>
+            <div className="ticket ticket-email">e-mail</div>
+            <div className="ticket ticket-date">datum expirace</div>
+          </div>
+          {
+            tickets
+              .filter(ticket => ticket.date < nowDate && ticket.email.includes(searchBoxText))
+              .map((ticket, index) => (
+                <div className="ticket-row" key={index} onClick={() => { editToggle(index, ticket) }}>
+                  <div className="ticket ticket-nr">{replaceUnderscore(ticket.ticket)}</div>
+                  <div className="ticket ticket-email">{ticket.email}</div>
+                  <div className="ticket ticket-date">{(ticket.date != 18000000) && zobrazitDatum(ticket.date)}
+                  </div>
+                  {selectedTicket == ticket._id &&
+                    <div className="ticket-edit-row">
+                      <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
+                    </div>
+                  }
+                  {selectedTicket == ticket._id &&
+                    <div className="ticket-edit-row ticket-controls">
+                      {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
+                      {isSaving && <p>ukládání...</p>}
+                      {saveSuccess && <p>uloženo</p>}
+                      {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
+                    </div>
+                  }
                 </div>
-                {selectedTicket == ticket._id &&
-                  <div className="ticket-edit-row">
-                    <textarea onClick={(event) => { event.stopPropagation() }} defaultValue={notes} onChange={(event) => { setNewNotes(event.target.value) }} name="" id="" cols="30" rows="3"></textarea>
-                  </div>
-                }
-                {selectedTicket == ticket._id &&
-                  <div className="ticket-edit-row ticket-controls">
-                    {!isSaving && !saveSuccess && <button className='btn' onClick={(event) => { saveNotes(ticket._id, newNotes, event) }}>uložit</button>}
-                    {isSaving && <p>ukládání...</p>}
-                    {saveSuccess && <p>uloženo</p>}
-                    {saveSuccess === false && <p>chyba při ukládání: {errorMessage}</p>}
-                  </div>
-                }
-              </div>
-            ))
-        }
+              ))
+          }
+        </div>
       </div>
-    </div>
-  )}
+    )
+  }
 }
 
 export default App;
